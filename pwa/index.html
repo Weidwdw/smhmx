@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta
+      name="description"
+      content="电务专业劳动安全验证考试离线刷题、专项练习与背题工具。"
+    />
+    <meta name="theme-color" content="#0f6b78" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="劳动安全刷题" />
+    <title>劳动安全验证考试 · 电务刷题</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="icons/favicon.png" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="home-header" id="homeHeader">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">安</div>
+          <div>
+            <div class="brand-title">劳动安全验证考试</div>
+            <div class="brand-sub">电务专业 · 150 题随机组卷</div>
+          </div>
+        </div>
+        <nav class="home-nav" aria-label="主导航">
+          <button class="nav-button" type="button" data-action="open-wrong">
+            错题本
+            <span class="nav-badge" id="wrongBadge">0</span>
+          </button>
+          <button class="nav-button" type="button" id="installAppButton">
+            安装到手机
+          </button>
+          <button class="nav-button" type="button" data-action="open-data">
+            数据管理
+          </button>
+        </nav>
+      </header>
+
+      <main id="homeView" class="view">
+        <section class="hero">
+          <div class="hero-copy">
+            <div class="eyebrow">LABOR SAFETY EXAM</div>
+            <h1>把每一次刷题，<br />都当成一次正式组卷。</h1>
+            <p>
+              按劳动安全验证考试配比生成 150 题试卷。填空、单选、判断分块作答，
+              专业劳动安全只取电务题库。
+            </p>
+            <div class="hero-actions">
+              <button class="button button-primary button-lg" type="button" id="startPaperButton">
+                开始新一套
+              </button>
+              <button class="button button-ghost button-lg" type="button" data-action="open-data">
+                查看数据
+              </button>
+            </div>
+            <div class="hero-note">
+              <span id="bankVersion">题库加载中</span>
+              <span class="dot"></span>
+              <span>完全离线运行</span>
+            </div>
+          </div>
+          <div class="hero-visual" aria-hidden="true">
+            <div class="hero-ring ring-one"></div>
+            <div class="hero-ring ring-two"></div>
+            <div class="hero-card">
+              <div class="hero-card-top">
+                <span>本套配比</span>
+                <span class="hero-tag">150 题</span>
+              </div>
+              <div class="hero-bars" id="heroBars"></div>
+              <div class="hero-score">
+                <div><strong>30</strong><span>填空</span></div>
+                <div><strong>60</strong><span>单选</span></div>
+                <div><strong>60</strong><span>判断</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="stat-strip" aria-label="题库统计">
+          <div class="stat-item">
+            <span class="stat-label">可用题目</span>
+            <strong id="statTotal">—</strong>
+            <span class="stat-hint">已剔除多选、简答、情境与案例</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">每套题量</span>
+            <strong>150</strong>
+            <span class="stat-hint">30 填空 · 60 单选 · 60 判断</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">专业范围</span>
+            <strong>电务</strong>
+            <span class="stat-hint">专业劳动安全仅使用电务题库</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">已完成记录</span>
+            <strong id="statPapers">0</strong>
+            <span class="stat-hint" id="statLastScore">还没有完成记录</span>
+          </div>
+        </section>
+
+        <div class="home-grid">
+          <section class="panel resume-panel" id="resumePanel" hidden>
+            <div class="panel-kicker">UNFINISHED</div>
+            <h2>上次还有一套没做完</h2>
+            <p id="resumeSummary"></p>
+            <div class="resume-actions">
+              <button class="button button-primary" type="button" id="resumeButton">
+                继续答题
+              </button>
+              <button class="button button-text danger-text" type="button" id="discardButton">
+                放弃本套
+              </button>
+            </div>
+          </section>
+
+          <section class="panel mode-panel">
+            <div class="panel-heading">
+              <div>
+                <div class="panel-kicker">MODE</div>
+                <h2>选择刷题方式</h2>
+              </div>
+              <span class="panel-meta">可随时切换</span>
+            </div>
+            <div class="mode-grid" id="modeGrid">
+              <button class="mode-card selected" type="button" data-mode="exam">
+                <span class="mode-icon">卷</span>
+                <span class="mode-title">模拟考试</span>
+                <span class="mode-desc">全部答完后统一交卷，交卷前不显示答案。</span>
+                <span class="mode-check">已选择</span>
+              </button>
+              <button class="mode-card" type="button" data-mode="practice">
+                <span class="mode-icon">练</span>
+                <span class="mode-title">练习模式</span>
+                <span class="mode-desc">每题可以立即检查，马上查看答案和解析。</span>
+                <span class="mode-check">已选择</span>
+              </button>
+            </div>
+            <div class="mode-footnote">
+              两种模式都使用同一套组卷规则：150 题、六个分类配比、专业题仅电务。
+            </div>
+          </section>
+
+          <section class="panel blueprint-panel">
+            <div class="panel-heading">
+              <div>
+                <div class="panel-kicker">BLUEPRINT</div>
+                <h2>下一套组卷配比</h2>
+              </div>
+              <span class="panel-meta" id="templateLabel">模板 A</span>
+            </div>
+            <div class="table-wrap">
+              <table class="blueprint-table">
+                <thead>
+                  <tr>
+                    <th>分类</th>
+                    <th>题量</th>
+                    <th>填空</th>
+                    <th>单选</th>
+                    <th>判断</th>
+                  </tr>
+                </thead>
+                <tbody id="blueprintBody"></tbody>
+              </table>
+            </div>
+            <div class="blueprint-note" id="roundingNote"></div>
+          </section>
+        </div>
+
+        <section class="panel training-panel">
+          <div class="panel-heading">
+            <div>
+              <div class="panel-kicker">TRAINING</div>
+              <h2>专项练习与背题</h2>
+            </div>
+            <span class="panel-meta" id="trainingPoolCount">可选 0 题</span>
+          </div>
+          <p class="training-intro">
+            从题库中自由选择题型和分类。专项练习立即判分；背题模式先看题，再点“显示答案”核对答案和解析。
+            专项训练不计入 150 题正式配比。
+          </p>
+          <div class="training-controls">
+            <div class="training-control training-control-types">
+              <span class="training-label">题型</span>
+              <div class="training-types" id="trainingTypes"></div>
+            </div>
+            <label class="training-control">
+              <span class="training-label">分类</span>
+              <select class="select-input" id="trainingCategory"></select>
+            </label>
+            <label class="training-control">
+              <span class="training-label">题量</span>
+              <select class="select-input" id="trainingCount">
+                <option value="20">20 题</option>
+                <option value="30">30 题</option>
+                <option value="50">50 题</option>
+                <option value="100">100 题</option>
+                <option value="all">全部可用题</option>
+              </select>
+            </label>
+            <label class="training-control">
+              <span class="training-label">顺序</span>
+              <select class="select-input" id="trainingOrder">
+                <option value="random">随机抽取</option>
+                <option value="sequential">按题库顺序</option>
+              </select>
+            </label>
+          </div>
+          <div class="training-actions">
+            <button class="button button-primary" type="button" id="startSpecialButton">
+              开始专项练习
+            </button>
+            <button class="button button-secondary" type="button" id="startStudyButton">
+              进入背题模式
+            </button>
+            <span class="training-hint" id="trainingHint"></span>
+          </div>
+        </section>
+
+        <section class="panel history-panel">
+          <div class="panel-heading">
+            <div>
+              <div class="panel-kicker">HISTORY</div>
+              <h2>最近做题记录</h2>
+            </div>
+            <button class="button button-text" type="button" data-action="open-data">
+              管理记录
+            </button>
+          </div>
+          <div id="historyList" class="history-list"></div>
+        </section>
+
+        <section class="panel last-result-panel" id="lastResultPanel" hidden>
+          <div>
+            <div class="panel-kicker">LAST RESULT</div>
+            <h2>上次成绩</h2>
+            <p id="lastResultSummary"></p>
+          </div>
+          <button class="button button-secondary" type="button" id="viewLastResultButton">
+            查看成绩
+          </button>
+        </section>
+
+        <footer class="app-footer">
+          <span>劳动安全验证考试 · 电务刷题</span>
+          <span>题库与进度只保存在本机浏览器</span>
+        </footer>
+      </main>
+
+      <main id="paperView" class="view" hidden>
+        <div class="paper-topbar">
+          <button class="icon-button back-button" type="button" id="backHomeButton">
+            <span aria-hidden="true">←</span>
+            返回
+          </button>
+          <div class="paper-meta">
+            <span class="mode-pill" id="paperModeBadge">模拟考试</span>
+            <span class="paper-seq" id="paperSeqLabel">第 1 套</span>
+          </div>
+          <div class="paper-progress-wrap">
+            <div class="paper-progress-track">
+              <div class="paper-progress-bar" id="paperProgressBar"></div>
+            </div>
+            <span id="paperProgressText">0 / 150</span>
+          </div>
+          <div class="timer" id="paperTimer">00:00</div>
+          <button class="button button-primary button-compact" type="button" id="submitPaperButton">
+            交卷
+          </button>
+          <button class="button button-ghost button-compact sheet-toggle" type="button" id="sheetToggleButton">
+            答题卡
+          </button>
+        </div>
+
+        <div class="paper-layout">
+          <section class="question-stage">
+            <div class="question-card" id="questionCard"></div>
+            <div class="question-footer" id="questionFooter"></div>
+          </section>
+          <aside class="answer-sheet" id="answerSheetPanel">
+            <div class="sheet-head">
+              <div>
+                <div class="panel-kicker">ANSWER SHEET</div>
+                <h2>答题卡</h2>
+              </div>
+              <button class="icon-button sheet-close" type="button" id="sheetCloseButton" aria-label="关闭答题卡">
+                ×
+              </button>
+            </div>
+            <div class="sheet-legend" id="sheetLegend">
+              <span><i class="legend-dot answered"></i>已答</span>
+              <span><i class="legend-dot current"></i>当前</span>
+              <span><i class="legend-dot flagged"></i>标记</span>
+            </div>
+            <div id="answerSheet" class="answer-sheet-body"></div>
+          </aside>
+        </div>
+      </main>
+
+      <main id="resultView" class="view" hidden>
+        <div class="section-topbar">
+          <button class="icon-button back-button" type="button" data-action="back-home">
+            <span aria-hidden="true">←</span>
+            返回首页
+          </button>
+          <div class="section-topbar-title">本套成绩</div>
+          <div></div>
+        </div>
+        <div id="resultContent"></div>
+      </main>
+
+      <main id="wrongView" class="view" hidden>
+        <div class="section-topbar">
+          <button class="icon-button back-button" type="button" data-action="back-home">
+            <span aria-hidden="true">←</span>
+            返回首页
+          </button>
+          <div class="section-topbar-title">错题本</div>
+          <div class="section-topbar-actions">
+            <button class="button button-text danger-text" type="button" id="clearWrongButton">
+              清空错题本
+            </button>
+          </div>
+        </div>
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">WRONG ANSWERS</div>
+            <h1>把错题留下来，反复看。</h1>
+            <p>错题按最近做错时间排序。答案默认收起，方便先自己回想。</p>
+          </div>
+          <button class="button button-primary" type="button" id="startFromWrongButton">
+            再刷一套
+          </button>
+        </div>
+        <div class="filter-row">
+          <input class="text-input" id="wrongSearchInput" type="search" placeholder="搜索题干或分类" />
+          <select class="select-input" id="wrongCategoryFilter">
+            <option value="">全部分类</option>
+          </select>
+        </div>
+        <div id="wrongList" class="wrong-list"></div>
+      </main>
+
+      <main id="dataView" class="view" hidden>
+        <div class="section-topbar">
+          <button class="icon-button back-button" type="button" data-action="back-home">
+            <span aria-hidden="true">←</span>
+            返回首页
+          </button>
+          <div class="section-topbar-title">数据管理</div>
+          <div></div>
+        </div>
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">LOCAL DATA</div>
+            <h1>所有记录只保存在这台电脑。</h1>
+            <p>可以导出备份，也可以在新电脑上导入。导入会替换当前记录。</p>
+          </div>
+        </div>
+        <div class="data-grid">
+          <section class="panel data-card">
+            <div class="panel-kicker">STORAGE</div>
+            <h2>本机数据概览</h2>
+            <div id="storageSummary" class="storage-summary"></div>
+          </section>
+          <section class="panel data-card">
+            <div class="panel-kicker">BACKUP</div>
+            <h2>备份与恢复</h2>
+            <p class="muted">导出的文件包含答题记录、错题本、当前未完成试卷和抽题历史。</p>
+            <div class="data-actions">
+              <button class="button button-primary" type="button" id="exportButton">
+                导出全部数据
+              </button>
+              <button class="button button-secondary" type="button" id="importButton">
+                导入数据
+              </button>
+              <input type="file" id="importFileInput" accept="application/json,.json" hidden />
+            </div>
+          </section>
+          <section class="panel data-card danger-zone">
+            <div class="panel-kicker">RESET</div>
+            <h2>清理记录</h2>
+            <p class="muted">题库文件不会被删除，只会清理浏览器里的做题记录。</p>
+            <div class="data-actions">
+              <button class="button button-ghost" type="button" id="clearHistoryButton">
+                清空答题记录
+              </button>
+              <button class="button button-ghost" type="button" id="clearWrongDataButton">
+                清空错题本
+              </button>
+              <button class="button button-danger" type="button" id="resetAllButton">
+                重置全部数据
+              </button>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <div id="modalRoot"></div>
+    <div id="toastRoot" class="toast-root" aria-live="polite"></div>
+
+    <script src="data/questions.js"></script>
+    <script src="assets/quiz-core.js"></script>
+    <script src="assets/app.js"></script>
+  </body>
+</html>
