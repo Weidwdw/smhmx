@@ -17,6 +17,11 @@
   ];
 
   const TYPE_ORDER = ["fill", "single", "judge"];
+  const PROFESSIONAL_SUBSERIES = new Set([
+    "电务劳动安全",
+    "货运劳动安全",
+    "车务劳动安全",
+  ]);
   const TYPE_LABELS = {
     fill: "填空题",
     single: "单选题",
@@ -31,19 +36,19 @@
   const BLUEPRINTS = {
     A: {
       安全基础: { fill: 2, single: 3, judge: 3 },
-      常见事故预防: { fill: 12, single: 37, judge: 26 },
+      常见事故预防: { fill: 12, single: 30, judge: 18 },
       季节性劳动安全: { fill: 3, single: 5, judge: 7 },
-      专业劳动安全: { fill: 10, single: 7, judge: 13 },
+      专业劳动安全: { fill: 10, single: 15, judge: 20 },
       事故处置: { fill: 2, single: 2, judge: 3 },
-      劳防用品与职业健康: { fill: 1, single: 6, judge: 8 },
+      劳防用品与职业健康: { fill: 1, single: 5, judge: 9 },
     },
     B: {
       安全基础: { fill: 2, single: 2, judge: 3 },
-      常见事故预防: { fill: 12, single: 37, judge: 26 },
+      常见事故预防: { fill: 12, single: 30, judge: 18 },
       季节性劳动安全: { fill: 3, single: 5, judge: 7 },
-      专业劳动安全: { fill: 10, single: 7, judge: 13 },
+      专业劳动安全: { fill: 10, single: 15, judge: 20 },
       事故处置: { fill: 2, single: 3, judge: 3 },
-      劳防用品与职业健康: { fill: 1, single: 6, judge: 8 },
+      劳防用品与职业健康: { fill: 1, single: 5, judge: 9 },
     },
   };
 
@@ -566,8 +571,11 @@
         seenDisallowedTypes.add(question.type);
         errors.push(`题目类型不允许: ${question.type}`);
       }
-      if (question.category === "专业劳动安全" && !String(question.subseries || "").includes("电务")) {
-        errors.push(`专业劳动安全出现非电务题: ${question.stem}`);
+      if (
+        question.category === "专业劳动安全" &&
+        !PROFESSIONAL_SUBSERIES.has(String(question.subseries || ""))
+      ) {
+        errors.push(`专业劳动安全出现不允许的子系列: ${question.stem}`);
       }
       if (question.type === "fill") {
         if (!Array.isArray(question.answerParts) || !question.answerParts.length) {

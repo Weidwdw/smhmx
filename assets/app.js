@@ -23,9 +23,11 @@
   let timerInterval = null;
   let timerStartedAt = 0;
   let timerBase = 0;
+  let autoAdvanceTimer = null;
   let saveTimer = null;
   let storageWarned = false;
   let deferredInstallPrompt = null;
+  let aiExplanationMap = new Map();
 
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => Array.from(document.querySelectorAll(selector));
@@ -255,6 +257,16 @@
 
   function isTrainingPaper(paper) {
     return paper.kind === "special" || paper.mode === "study";
+  }
+
+  function getExplanation(question) {
+    return (
+      question.explanation || aiExplanationMap.get(question.id) || ""
+    );
+  }
+
+  function questionTopic(question) {
+    return question.professionalPart || question.topic || "";
   }
 
   function isStandaloneMode() {
@@ -814,9 +826,9 @@
 
   function renderHeroBars(categoryTotals) {
     const rows = [
-      ["常见事故预防", 75],
-      ["专业劳动安全", 30],
-      ["劳防用品与职业健康", 15],
+      ["常见事故预防", 60],
+      ["专业劳动安全", 60],
+      ["劳防用品与职业健康", 60],
     ];
     $("#heroBars").innerHTML = rows
       .map(([category, scale]) => {
@@ -1006,6 +1018,7 @@
       true
     );
     if (!ok) return;
+    cancelAutoAdvance();
     stopTimer(false);
     state.activePaper = null;
     activeSession = null;
@@ -1014,6 +1027,7 @@
   }
 
   function pausePaper() {
+    cancelAutoAdvance();
     stopTimer(true);
     activeSession = null;
     showView("home");
@@ -1085,7 +1099,7 @@
         }</span></div>
         ${categoryChip(question.category)}
         ${typeChip(question.type)}
-        <span class="chip chip-topic">${escapeHtml(question.topic)}</span>
+        <span class="chip chip-topic">${escapeHtml(questionTopic(question))}</span>
       </div>
       <div class="question-stem" id="stemArea"></div>
       <div class="answer-area" id="answerArea"></div>
@@ -1138,7 +1152,7 @@
         }</span></div>
         ${categoryChip(question.category)}
         ${typeChip(question.type)}
-        <span class="chip chip-topic">${escapeHtml(question.topic)}</span>
+        <span class="chip chip-topic">${escapeHtml(questionTopic(question))}</span>
       </div>
       <div class="question-stem">${escapeHtml(question.stem)}</div>
       <div class="answer-area">${answerPreview}</div>
@@ -1158,9 +1172,9 @@
                 core.formatExpected(question)
               )}</div>
               ${
-                question.explanation
+                getExplanation(question)
                   ? `<div class="study-answer-explanation">解析：${escapeHtml(
-                      question.explanation
+                      getExplanation(question)
                     )}</div>`
                   : ""
               }
@@ -1301,6 +1315,33 @@
 
   function setSimpleAnswer(question, value) {
     activeSession.answers[question.id] = value;
+    const paper = activeSession.paper;
+    const autoJudge =
+      isPracticeMode(paper) &&
+      (question.type === "single" || question.type === "judge");
+    if (autoJudge) {
+      activeSession.checked[question.id] = true;
+      const score = core.scoreQuestion(question, value);
+      const currentIndex = activeSession.currentIndex;
+      const questions = getQuestions(activeSession);
+      saveState({ silent: true });
+      renderQuestion();
+      updatePaperProgress();
+      if (score.correct) {
+        if (currentIndex < questions.length - 1) {
+          if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
+          autoAdvanceTimer = window.setTimeout(() => {
+            autoAdvanceTimer = null;
+            if (activeSession && activeSession.currentIndex === currentIndex) {
+              goToQuestion(currentIndex + 1);
+            }
+          }, 220);
+        } else {
+          showToast("最后一题已答对，可交卷");
+        }
+      }
+      return;
+    }
     activeSession.checked[question.id] = false;
     saveState({ silent: true });
     renderQuestion();
@@ -1347,9 +1388,9 @@
     area.innerHTML = `<div class="feedback-head">${
       score.correct ? "回答正确" : "回答错误"
     }</div>${detail}${
-      question.explanation
+      getExplanation(question)
         ? `<div class="feedback-explanation">解析：${escapeHtml(
-            question.explanation
+            getExplanation(question)
           )}</div>`
         : ""
     }`;
@@ -1428,7 +1469,7 @@
       <button class="button button-ghost" type="button" data-footer-action="clear">清空</button>
       <span class="spacer"></span>
       ${
-        isPracticeMode(activeSession.paper)
+        isPracticeMode(activeSession.paper) && question.type === "fill"
           ? `<button class="button button-secondary" type="button" data-footer-action="check">${
               checked ? "再检查" : "检查"
             }</button>`
@@ -1466,13 +1507,37 @@
     if (!activeSession) return;
     const questions = getQuestions(activeSession);
     const next = Math.max(0, Math.min(index, questions.length - 1));
+    if (next === activeSession.currentIndex) return;
+    if (autoAdvanceTimer) {
+      clearTimeout(autoAdvanceTimer);
+      autoAdvanceTimer = null;
+    }
     activeSession.currentIndex = next;
     saveState({ silent: true });
     renderQuestion();
-    renderAnswerSheet();
+    updatePaperProgress();
+    animateQuestionCard();
     closeSheet();
-    if (window.innerWidth < 980) {
+    if (window.innerWidth < 980 && window.scrollY > 32) {
       window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
+  function animateQuestionCard() {
+    const card = $("#questionCard");
+    if (!card) return;
+    card.classList.remove("question-enter");
+    void card.offsetWidth;
+    card.classList.add("question-enter");
+    const clear = () => card.classList.remove("question-enter");
+    card.addEventListener("animationend", clear, { once: true });
+    window.setTimeout(clear, 300);
+  }
+
+  function cancelAutoAdvance() {
+    if (autoAdvanceTimer) {
+      clearTimeout(autoAdvanceTimer);
+      autoAdvanceTimer = null;
     }
   }
 
@@ -1646,6 +1711,7 @@
 
   function finishStudy() {
     if (!activeSession) return;
+    cancelAutoAdvance();
     stopTimer(false);
     state.activePaper = null;
     activeSession = null;
@@ -1656,6 +1722,7 @@
 
   function finishPaper() {
     if (!activeSession) return;
+    cancelAutoAdvance();
     const durationSec = getElapsedSeconds();
     activeSession.elapsedSec = durationSec;
     stopTimer(false);
@@ -1876,9 +1943,9 @@
       </div>
       ${partDetail}
       ${
-        question.explanation
+        getExplanation(question)
           ? `<div class="result-explanation">解析：${escapeHtml(
-              question.explanation
+              getExplanation(question)
             )}</div>`
           : ""
       }
@@ -1910,7 +1977,8 @@
         return (
           item.question.stem.toLowerCase().includes(query) ||
           item.question.category.toLowerCase().includes(query) ||
-          (item.question.topic || "").toLowerCase().includes(query)
+          (item.question.topic || "").toLowerCase().includes(query) ||
+          (item.question.professionalPart || "").toLowerCase().includes(query)
         );
       })
       .sort((a, b) => {
@@ -1938,7 +2006,7 @@
           <div class="wrong-item-head">
             ${categoryChip(question.category)}
             ${typeChip(question.type)}
-            <span class="chip chip-topic">${escapeHtml(question.topic)}</span>
+            <span class="chip chip-topic">${escapeHtml(questionTopic(question))}</span>
             <span class="wrong-count">错 ${meta.wrongCount || 1} 次</span>
           </div>
           <p class="wrong-stem">${escapeHtml(question.stem)}</p>
@@ -1953,9 +2021,9 @@
               )}</div>
               <div><strong>正确答案：</strong>${escapeHtml(expected)}</div>
               ${
-                question.explanation
+                getExplanation(question)
                   ? `<div class="explanation">解析：${escapeHtml(
-                      question.explanation
+                      getExplanation(question)
                     )}</div>`
                   : ""
               }
@@ -2208,7 +2276,11 @@
       toggleFlag(question);
       return;
     }
-    if (event.key.toLowerCase() === "c" && isPracticeMode(activeSession.paper)) {
+    if (
+      event.key.toLowerCase() === "c" &&
+      question.type === "fill" &&
+      isPracticeMode(activeSession.paper)
+    ) {
       event.preventDefault();
       checkCurrent();
       return;
@@ -2335,6 +2407,9 @@
       return;
     }
     questionMap = core.buildQuestionMap(bank);
+    aiExplanationMap = new Map(
+      Object.entries(globalThis.AI_EXPLANATIONS || {})
+    );
     state = loadState();
     bindEvents();
     showView("home");

@@ -8,7 +8,7 @@
     />
     <meta
       name="description"
-      content="电务专业劳动安全验证考试离线刷题、专项练习与背题工具。"
+      content="劳动安全验证考试离线刷题、专项练习与背题工具，专业部分包含电务、货运、车务和装卸机械。"
     />
     <meta name="theme-color" content="#0f6b78" />
     <meta name="format-detection" content="telephone=no" />
@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="劳动安全刷题" />
-    <title>劳动安全验证考试 · 电务刷题</title>
+    <title>劳动安全验证考试 · 专业刷题</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" type="image/png" href="icons/favicon.png" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
@@ -29,7 +29,7 @@
           <div class="brand-mark" aria-hidden="true">安</div>
           <div>
             <div class="brand-title">劳动安全验证考试</div>
-            <div class="brand-sub">电务专业 · 150 题随机组卷</div>
+            <div class="brand-sub">电务 · 货运 · 车务 · 装卸机械</div>
           </div>
         </div>
         <nav class="home-nav" aria-label="主导航">
@@ -53,7 +53,7 @@
             <h1>把每一次刷题，<br />都当成一次正式组卷。</h1>
             <p>
               按劳动安全验证考试配比生成 150 题试卷。填空、单选、判断分块作答，
-              专业劳动安全只取电务题库。
+              专业劳动安全包含电务、货运、车务和装卸机械。
             </p>
             <div class="hero-actions">
               <button class="button button-primary button-lg" type="button" id="startPaperButton">
@@ -100,8 +100,8 @@
           </div>
           <div class="stat-item">
             <span class="stat-label">专业范围</span>
-            <strong>电务</strong>
-            <span class="stat-hint">专业劳动安全仅使用电务题库</span>
+            <strong>多专业</strong>
+            <span class="stat-hint">电务、货运、车务、装卸机械</span>
           </div>
           <div class="stat-item">
             <span class="stat-label">已完成记录</span>
@@ -143,12 +143,12 @@
               <button class="mode-card" type="button" data-mode="practice">
                 <span class="mode-icon">练</span>
                 <span class="mode-title">练习模式</span>
-                <span class="mode-desc">每题可以立即检查，马上查看答案和解析。</span>
+                <span class="mode-desc">单选、判断自动判分；填空可检查答案和解析。</span>
                 <span class="mode-check">已选择</span>
               </button>
             </div>
             <div class="mode-footnote">
-              两种模式都使用同一套组卷规则：150 题、六个分类配比、专业题仅电务。
+              两种模式都使用同一套组卷规则：150 题、六个分类配比，专业题包含电务、货运、车务和装卸机械。
             </div>
           </section>
 
@@ -253,7 +253,7 @@
         </section>
 
         <footer class="app-footer">
-          <span>劳动安全验证考试 · 电务刷题</span>
+          <span>劳动安全验证考试 · 专业刷题</span>
           <span>题库与进度只保存在本机浏览器</span>
         </footer>
       </main>
@@ -412,6 +412,7 @@
     <div id="toastRoot" class="toast-root" aria-live="polite"></div>
 
     <script src="data/questions.js"></script>
+    <script src="data/ai_explanations.js"></script>
     <script src="assets/quiz-core.js"></script>
     <script src="assets/app.js"></script>
   </body>

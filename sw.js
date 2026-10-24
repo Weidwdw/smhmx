@@ -1,4 +1,4 @@
-const CACHE_NAME = "smhmx-pwa-v1";
+const CACHE_NAME = "smhmx-pwa-v4";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -6,6 +6,7 @@ const APP_SHELL = [
   "./assets/quiz-core.js",
   "./assets/app.js",
   "./data/questions.js",
+  "./data/ai_explanations.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
